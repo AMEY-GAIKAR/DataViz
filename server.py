@@ -1,3 +1,4 @@
+import pandas as pd
 import seaborn as sns
 import plotly.express as px
 from dash import Dash, dcc, html, dash_table, callback, Output, Input
@@ -5,7 +6,8 @@ import dash_mantine_components as dmc
 
 app = Dash(__name__)
 
-df = sns.load_dataset('diamonds')
+# df = pd.read_csv('')
+df = sns.load_dataset('penguins')
 
 colors = {
     'background': '#111111',
@@ -36,13 +38,13 @@ app.layout = html.Div([
     html.Div([
         dcc.Dropdown(df.columns, df.columns[1], id='y-axis-column-box')
     ], style={
-
+            
     }),
     html.Div([
-        dcc.Dropdown(df.columns, df.columns[-1], id='hue-column-box')
+        dcc.Dropdown(df.columns, df.columns[-1], id='color-column-box')
     ], style={
 
-   }),
+    }),
     dcc.Graph(id='graph-box'),
     html.H4(style={},children='Scatterplot'),
     html.Div([
@@ -56,34 +58,30 @@ app.layout = html.Div([
 
    }),
     html.Div([
-        dcc.Dropdown(df.columns, df.columns[-1], id='hue-column-scatter')
+        dcc.Dropdown(df.columns, df.columns[-1], id='color-column-scatter')
     ], style={
 
     }),
     dcc.Graph(id='graph-scatter'),
-    dmc.Container([
-        dmc.Title('Histogram', color='blue', size='h2'),
-        dmc.RadioGroup(
-            [dmc.Radio(i, value=i) for i in df.columns],
-            id='dmc-radio-item',
-            size='sm'
-        ),
-        dmc.Grid([
-            dmc.Col([
-                dash_table.DataTable(data=df.to_dict('records'), page_size=10, style_table={'overflowX':'auto'})
-                ], span=6),
-            dmc.Col([
-                dcc.Graph(figure={}, id='graph-placeholder')
-            ], span=6)
-        ])
-    ])
+    html.H4(style={},children='Histogram'),
+    html.Div([
+        dcc.Dropdown(df.columns, df.columns[1], id='x-axis-column-hist')
+    ], style={
+
+   }),
+    html.Div([
+        dcc.Dropdown(df.columns, df.columns[-1], id='color-column-hist')
+    ], style={
+
+    }),
+    dcc.Graph(id='graph-hist'),
 ])
 
 @callback(
     Output('graph-scatter', 'figure'),
     Input('x-axis-column-scatter', 'value'),
     Input('y-axis-column-scatter', 'value'),
-    Input('hue-column-scatter', 'value')
+    Input('color-column-scatter', 'value')
 ) 
 def scatter_plot(x_axis_column, y_axis_column, color=None):
     fig = px.scatter(df,x=x_axis_column,y=y_axis_column, color=color)
@@ -93,24 +91,20 @@ def scatter_plot(x_axis_column, y_axis_column, color=None):
     Output('graph-box', 'figure'),
     Input('x-axis-column-box', 'value'),
     Input('y-axis-column-box', 'value'),
-    Input('hue-column-box', 'value')
+    Input('color-column-box', 'value')
 ) 
 def boxplot_plot(x_axis_column, y_axis_column=None, color=None):
     fig = px.box(df,x=x_axis_column,y=y_axis_column, color=color)
     return fig
 
 @callback(
-    Output(component_id='graph-placeholder', component_property='figure'),
-    Input(component_id='dmc-radio-item',  component_property='value')
-)
-def histogram_plot(col_chosen):
-    fig = px.histogram(df, x=col_chosen)
-    fig.update_layout(
-        plot_bgcolor=colors['background'],
-        paper_bgcolor=colors['background'],
-        font_color=colors['text']
-    )
-    return fig 
+    Output('graph-hist', 'figure'),
+    Input('x-axis-column-hist', 'value'),
+    Input('color-column-hist', 'value')
+) 
+def histplot_plot(x_axis_column, color=None):
+    fig = px.histogram(df,x=x_axis_column, color=color)
+    return fig
 
 if __name__ == "__main__":
     app.run(debug=True)
